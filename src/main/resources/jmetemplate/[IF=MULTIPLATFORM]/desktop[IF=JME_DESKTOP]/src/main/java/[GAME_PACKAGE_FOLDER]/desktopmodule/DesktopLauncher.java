@@ -14,7 +14,7 @@ public class DesktopLauncher {
         final AppSettings appSettings = new AppSettings(true);
 
         game.setSettings(appSettings);
-        [IF=MACOS]app.setShowSettings(false); //Settings dialog not supported on mac[/IF=MACOS]
+        [IF=MACOS]game.setShowSettings(false); //Settings dialog not supported on mac[/IF=MACOS]
         game.start();
     }
 }
