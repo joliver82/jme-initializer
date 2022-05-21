@@ -63,8 +63,19 @@ public class TemplateTests{
 
     @Test
     public void testMultiProjectTemplate_withoutTamarin() throws Exception{
-        testTemplate("MultiNoTamarinTest", "com.example", List.of("JME_DESKTOP", "JME_ANDROID", "JME_EFFECTS", "JME_VR", "MINIE" ) );
+        testTemplate("MultiNoTamarinTest", "com.example", List.of("JME_DESKTOP", "JME_ANDROID", "JME_VR", "JME_EFFECTS",  "MINIE" ) );
     }
+
+    @Test
+    public void testMultiProject_desktopVr_Template_withTamarin() throws Exception{
+        testTemplate("MultiTamarinTest", "com.example",  List.of( "JME_DESKTOP", "JME_VR", "JME_EFFECTS", "MINIE", "TAMARIN" ) );
+    }
+
+    @Test
+    public void testMultiProject_desktopAndroid_Template() throws Exception{
+        testTemplate("MultiTamarinTest", "com.example",  List.of( "JME_DESKTOP", "JME_ANDROID", "JME_EFFECTS", "MINIE" ) );
+    }
+
 
     @Test
     public void testDesktopTemplate() throws Exception{
