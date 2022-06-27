@@ -91,7 +91,9 @@ public enum MergeField {
      *
      * This is a deduped list of all the libraries required by all the libraries
      */
-    MAVEN_REPOS
+    MAVEN_REPOS,
+
+    CSV_LIBRARIES
     ;
 
     /**

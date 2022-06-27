@@ -70,6 +70,7 @@
 }
 .jumbotron {
     background: none!important;
+    padding:2rem 2rem;
 }
 
 
@@ -86,4 +87,16 @@ body.embedded > .container{
     min-width:100%;
     padding:0;
     margin:0;
+}
+
+#donations{
+    flex-direction: column;
+    display:none;
+}
+
+#donations iframe{
+    width:100%;
+    height:200px;
+    border:none;
+    background:none;
 }

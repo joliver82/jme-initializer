@@ -62,3 +62,9 @@ task cleanLogs(type: Delete) {
 task cleanSOs(type: Delete) {
     delete fileTree(dir: '.', include: '*.so')
 }
+
+task fund(){
+    doLast {
+       java.awt.Desktop.desktop.browse "https://start.jmonkeyengine.org/#!funding=[CSV_LIBRARIES]".toURI()
+    }
+}

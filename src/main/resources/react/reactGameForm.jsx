@@ -141,6 +141,10 @@ class ReactGameForm extends React.Component {
             //doesn't "actually" change the page location because its a download link
             location.href = "/jme-initializer/zip?" + this.formOptionsQueryString();
         }
+
+        setTimeout(()=>{
+            window.location.href="#!funding="+this.getRequiredLibrariesAsCommaSeperatedList()
+        },5000);
     }
 
     formOptionsQueryString = () => {
@@ -410,7 +414,7 @@ class ReactGameForm extends React.Component {
                 libraryChecks.push(<div className="form-check" key = {"libraryDiv" + library.key}>
                     <input disabled = {!this.libraryCurrentlySupported(library)} className="form-check-input" type="checkbox" value={library.key} id={"libraryCheck" + library.key} checked = {this.state.freeSelectLibraries.includes(library.key)} onChange = {event => this.handleToggleFreeFormLibrary(library)} />
                     <label className="form-check-label" htmlFor={"libraryCheck" + library.key}>
-                        <b>{library.libraryName}</b>
+                        <b dangerouslySetInnerHTML={{ __html: library.libraryName}}></b>
                         <p>{library.libraryDescription}</p>
                         {this.renderRequiredPlatformStatement(library)}
                     </label>
@@ -490,8 +494,8 @@ class ReactGameForm extends React.Component {
 
             {this.renderExclusiveGroups()}
 
-            <h2>Other</h2>
-            <p>Libraries often found to be useful in JME applications</p>
+            <h2>Community Libraries</h2>
+            <p>Libraries provided by the JME community</p>
             {this.renderOtherLibraries()}
 
             <br/>

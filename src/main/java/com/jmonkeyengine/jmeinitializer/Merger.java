@@ -1,13 +1,8 @@
 package com.jmonkeyengine.jmeinitializer;
 
-import com.jmonkeyengine.jmeinitializer.libraries.Library;
-import com.jmonkeyengine.jmeinitializer.libraries.LibraryCategory;
-import com.jmonkeyengine.jmeinitializer.libraries.LibraryService;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.CaseUtils;
-
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +13,13 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.CaseUtils;
+
+import com.jmonkeyengine.jmeinitializer.libraries.Library;
+import com.jmonkeyengine.jmeinitializer.libraries.LibraryCategory;
+import com.jmonkeyengine.jmeinitializer.libraries.LibraryService;
 
 /**
  * The merger is responsible for replacing merge fields in text documents and paths with their merged data.
@@ -85,6 +87,7 @@ public class Merger {
         mergeData.put(MergeField.ALL_NON_JME_NON_SPECIALISED_DEPENDENCIES, formNonJmeNonSpecialised(librariesRequired, libraryVersions));
         mergeData.put(MergeField.ALL_NON_JME_DEPENDENCIES, eliminateEmptyLines(mergeData.get(MergeField.VR_SPECIALISED_DEPENDENCIES)+"\n"+mergeData.get(MergeField.ANDROID_SPECIALISED_DEPENDENCIES)+"\n"+mergeData.get(MergeField.DESKTOP_SPECIALISED_DEPENDENCIES)+"\n"+mergeData.get(MergeField.ALL_NON_JME_NON_SPECIALISED_DEPENDENCIES)));
         mergeData.put(MergeField.MAVEN_REPOS, formMavenRepos(librariesRequired));
+        mergeData.put(MergeField.CSV_LIBRARIES, csvLibraires(librariesRequired));
 
         libraryKeysAndProfilesInUse = librariesRequired.stream().map(Library::getKey).collect(Collectors.toSet());
         libraryKeysAndProfilesInUse.addAll(additionalProfiles);
@@ -262,6 +265,22 @@ public class Merger {
         return mavenRepos.stream()
                 .sorted() //sorting them makes testing this easier
                 .collect(Collectors.joining("\n"));
+    }
+
+    public static String csvLibraires(List<Library> librariesRequired){
+        StringBuilder sb=new StringBuilder();
+        for(Library l:librariesRequired){
+            String key=l.getKey();
+            if(sb.length()!=0)sb.append(",");
+            try{
+                sb.append(URLEncoder.encode(key,"UTF-8"));
+            }catch(UnsupportedEncodingException e){
+                e.printStackTrace();
+            }            
+        }
+        
+        return sb.toString();
+
     }
 
     protected static String formPlatformSpecialisedLibrariesMergeField(List<Library> librariesRequired, Map<String,String> libraryVersions, String platform){
