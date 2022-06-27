@@ -16,7 +16,7 @@ public class Schedular{
     private final LibraryService libraryService;
     private final VersionService versionService;
 
-    @Scheduled(fixedDelay = 24, timeUnit = TimeUnit.HOURS)
+    @Scheduled(fixedDelay = 15, timeUnit = TimeUnit.MINUTES)
     public void refreshLibraryData(){
         libraryService.fetchNewLibraries();
         versionService.fetchNewVersions();
