@@ -1,6 +1,5 @@
 package com.jmonkeyengine.jmeinitializer;
 
-import com.jmonkeyengine.jmeinitializer.deployment.DeploymentOption;
 import com.jmonkeyengine.jmeinitializer.libraries.Library;
 import com.jmonkeyengine.jmeinitializer.libraries.LibraryCategory;
 import com.jmonkeyengine.jmeinitializer.libraries.LibraryService;
@@ -13,8 +12,11 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -26,6 +28,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -47,7 +50,7 @@ public class InitializerZipService {
     private final VersionService versionService;
 
     private final LibraryService libraryService;
-
+    
     /**
      * If true, then if libaries are requested that are inappropriate (or not available) an exception is thrown
      */
@@ -100,7 +103,7 @@ public class InitializerZipService {
         }
         return byteArrayOutputStream;
     }
-
+  
     /**
      * @param gameName the game name
      * @param packageName the package used by the game classes
@@ -125,6 +128,40 @@ public class InitializerZipService {
                     fileContents = merger.mergeFileContents(templateFile.getValue());
                 }
                 templateFiles.put(mergedPath, fileContents);
+            }
+        }
+
+
+        for(Library lib: requiredLibraries){
+            if(lib.getExamplesPath() == null) continue;
+            String url = lib.getExamplesPath();
+            String subPath = "/";
+            int i = url.lastIndexOf(":");
+            if(i != -1){
+                subPath = url.substring(i+1);
+                url = url.substring(0,i);
+            }
+            if(subPath.equals("/")||subPath.isBlank()) subPath=null;
+            else if(subPath.startsWith("/")) subPath=subPath.substring(1);
+
+            try{
+                URL zipUrl=new URL(url);
+                InputStream is=new BufferedInputStream(zipUrl.openStream());         
+                ZipInputStream zis=new ZipInputStream(is);
+                while(true){
+                    ZipEntry entry = zis.getNextEntry();
+                    if(entry == null) break;
+                    if(entry.isDirectory()) continue;
+                    if(subPath==null||entry.getName().startsWith(subPath)){
+                        byte[] entryData=zis.readNBytes((int)entry.getSize());
+                        String entryName = subPath==null?entry.getName():entry.getName().substring(subPath.length());                        
+                        templateFiles.put(entryName,entryData);
+                    }
+                }
+                zis.close();
+                is.close();
+            }catch(Exception e){
+                e.printStackTrace();
             }
         }
         return templateFiles;

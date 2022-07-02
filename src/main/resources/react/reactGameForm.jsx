@@ -134,17 +134,38 @@ class ReactGameForm extends React.Component {
 
     }
 
-    handleSubmit = (event) =>  {
+    handleSubmit = (event) => {
         event.preventDefault(); //don't refresh the page
         if (this.validate()) {
-            this.setState({hasDownloaded: true});
-            //doesn't "actually" change the page location because its a download link
-            location.href = "/jme-initializer/zip?" + this.formOptionsQueryString();
+            this.setState({ hasDownloaded: true });
+
+            setTimeout(() => {
+                window.scrollTo(0, document.body.scrollHeight);
+            }, 1000);
+
+            document.querySelectorAll("button").forEach(el => {
+                el.style.pointerEvents = "none";
+                el.innerHTML = `<i class="fas fa-spinner fa-spin"></i> `;
+            });
+
+            fetch("/jme-initializer/zip?" + this.formOptionsQueryString())
+                .then(resp => resp.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = this.state.gameName + ".zip";
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    setTimeout(() => {
+                        window.location.href = "#!funding=" + this.getRequiredLibrariesAsCommaSeperatedList()
+                    }, 2000);
+                });
+
         }
 
-        setTimeout(()=>{
-            window.location.href="#!funding="+this.getRequiredLibrariesAsCommaSeperatedList()
-        },5000);
     }
 
     formOptionsQueryString = () => {
@@ -502,7 +523,7 @@ class ReactGameForm extends React.Component {
 
             { this.state.gradlePreview !== null && this.renderGradlePreview() }
 
-            {this.state.hasDownloaded && <div className="alert alert-success" role="alert">
+            {this.state.hasDownloaded && <div className="alert alert-success downloadAlert" role="alert">
                 <p>A zip will now download. Unzip it and use it as a starter project in the IDE of your choice.</p>
                 <p>IntelliJ, Android Studio and Eclipse will support this project by default, Netbeans will support it with the Gradle plugin installed</p>
             </div>}

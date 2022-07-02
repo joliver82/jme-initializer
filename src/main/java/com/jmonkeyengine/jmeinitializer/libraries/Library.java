@@ -64,6 +64,12 @@ public class Library {
     @JsonProperty( required = true)
     String descriptionText;
 
+
+    @Schema( example = "https://github.com/jMonkeyEngine/jmonkeyengine/archive/refs/heads/master.zip:/jme3-examples", description = "An url to a zip archive containing example code. You can specify a subfolder insize the zip archive by adding :/sub/path at the end of the url.")
+    @JsonProperty( required = false)
+    String examplesPath;
+
+
     @Singular()
     @Schema( example = "[\"JME_DESKTOP\"]", description =
             """
