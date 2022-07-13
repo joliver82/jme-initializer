@@ -19,6 +19,14 @@
         <script src="/js/dist/main.js"></script>
         <title>jMonkey Initializer</title>
         <script>
+            window.scrollToTop = (contentAnchor) => {
+                window.scrollTo(0,0);
+                if(parent){
+                    parent.postMessage(JSON.stringify({
+                        name: "jme-initializer-scrollToTop"
+                    }), "*");
+                }
+            }
             if (parent) {
                 setInterval(() => {
                     parent.postMessage(JSON.stringify({
@@ -30,10 +38,9 @@
             if (window.self != window.top) {
                 window.addEventListener("load", () => {
                     document.body.classList.add("embedded");
-                });
-
-             
+                });             
             }
+            
             window.addEventListener("message", (msg) => {
                     try {
                         const event = JSON.parse(msg.data);
@@ -41,6 +48,8 @@
                             const height = event.height;
                             document.querySelector("#splitdonation").style.height = height + 'px';
                             document.querySelector("#splitdonation").scrolling="no";
+                        }else if (event.name == "split-donation-scrollToTop") {
+                            window.scrollToTop();
                         }
                     } catch (e) {
                         console.log(e);
