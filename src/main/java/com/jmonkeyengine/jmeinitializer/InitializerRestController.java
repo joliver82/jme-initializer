@@ -1,14 +1,17 @@
 package com.jmonkeyengine.jmeinitializer;
 
+import com.jmonkeyengine.jmeinitializer.dto.MostRecentVersionSearchResult;
 import com.jmonkeyengine.jmeinitializer.libraries.Library;
 import com.jmonkeyengine.jmeinitializer.libraries.LibraryService;
 import com.jmonkeyengine.jmeinitializer.uisupport.UiLibraryDataDto;
+import com.jmonkeyengine.jmeinitializer.versions.FreeFormVersionSearchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.AllArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -26,11 +29,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Represents endpoints used by the front end
  */
 @RestController
+@AllArgsConstructor
 public class InitializerRestController {
 
     private static final String GAME_NAME_DOC_STRING = "The name of the game, will be sanitised to something like MyExcellentGame. Caller is not required to sanitise";
@@ -41,11 +46,7 @@ public class InitializerRestController {
 
     private final InitializerZipService initializerZipService;
     private final LibraryService libraryService;
-
-    public InitializerRestController (InitializerZipService initializerZipService, LibraryService libraryService) {
-        this.initializerZipService = initializerZipService;
-        this.libraryService = libraryService;
-    }
+    private final FreeFormVersionSearchService freeFormVersionSearchService;
 
     @Operation( summary = "The available library description json", description = "Returns a json packet that includes data on all the libraries that the initializer has to offer. \n\nIntended to be used by a UI application to display the options available to the user")
     @GetMapping("/jme-initializer/libraries")
@@ -97,5 +98,29 @@ public class InitializerRestController {
         Map<String, String> gradleFile = initializerZipService.produceGradleFilePreview(gameName, packageName, Arrays.asList(libraryList.split(",")), Arrays.asList(deploymentOptionsList.split(",")) );
 
         return ResponseEntity.ok().body(gradleFile);
+    }
+
+    @Operation( summary = "Uses Maven Central to determine the most recent version of a library", description = "Uses Maven Central to determine the most recent version of a library, will cache internally for a period so will not hit maven central excessively. Note it uses the version number to determine most recent, not the publishing date. So 4.0.0 is more recent than emergency bugfix release 3.9.9 even if 3.9.9 was released after 4.0.0")
+    @ApiResponses( value = {
+            @ApiResponse(responseCode = "200", description = "The most recent (acceptable) version of the library",
+                    content = { @Content(mediaType = "application/json", schema = @Schema(example = "{ \"found\":\"true\", \"version\":\"1.0.2\"}")) }),
+    })
+    @ResponseBody
+    @GetMapping("/jme-initializer/most-recent-version-search")
+    public ResponseEntity<MostRecentVersionSearchResult> getMostRecentVersion(
+            @Parameter(description="Library group id", example = "com.onemillionworlds") @RequestParam String groupId,
+            @Parameter(description="Library Artifact Id", example = "tamarin") @RequestParam String artifactId,
+            @Parameter(description="Acceptable version regex (used to filter out beta releases etc). Be sure to escape correctly for a url", example = "[\\.\\d]*") @RequestParam(defaultValue="[\\.\\d]*") String versionRegex) {
+
+        Optional<String> version = freeFormVersionSearchService.fetchOrGetMostRecentVersion(groupId, artifactId, versionRegex);
+
+        MostRecentVersionSearchResult searchResult;
+        if (version.isPresent()){
+            searchResult = new MostRecentVersionSearchResult(true, version.get());
+        }else{
+            searchResult = new MostRecentVersionSearchResult(false, "");
+        }
+
+        return ResponseEntity.ok(searchResult);
     }
  }

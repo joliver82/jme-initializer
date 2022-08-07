@@ -64,8 +64,11 @@ public class VersionService {
         fetchMostRecentStableVersion("org.jmonkeyengine", "jme3-core", ".*-stable").ifPresent(newVersion -> this.jmeVersion=newVersion);
 
         for(Library library : libraryService.nonJmeLibraries()) {
+
             for (Artifact artifact : library.getArtifacts()) {
-                fetchMostRecentStableVersion(artifact.getGroupId(), artifact.getArtifactId(), artifact.getLibraryVersionRegex()).ifPresent(newVersion -> versionCache.put(artifact.getGroupId() + ":" + artifact.getArtifactId(), newVersion));
+                if (artifact.getPinVersionOpt().isEmpty()){
+                    fetchMostRecentStableVersion(artifact.getGroupId(), artifact.getArtifactId(), artifact.getLibraryVersionRegex()).ifPresent(newVersion -> versionCache.put(artifact.getGroupId() + ":" + artifact.getArtifactId(), newVersion));
+                }
             }
         }
     }
@@ -76,7 +79,7 @@ public class VersionService {
      *
      * The acceptableLibraryRegex is used to determine if its a "release" version
      */
-    private Optional<String> fetchMostRecentStableVersion(String group, String artifact, String acceptableLibraryRegex){
+    public Optional<String> fetchMostRecentStableVersion(String group, String artifact, String acceptableLibraryRegex){
         return fetchRawVersionsForLibrary(group, artifact, acceptableLibraryRegex)
                 .filter( listOfVersions -> !listOfVersions.isEmpty())
                 .map( listOfVersions ->
