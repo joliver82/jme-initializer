@@ -8,9 +8,9 @@ class ReactGameForm extends React.Component {
         this.state = {
             gameName: "",
             package : "",
-            //all the libaries that aren't radios are in here.Its just a big list of selected library keys
+            //all the libraries that aren't radios are in here.Its just a big list of selected library keys
             freeSelectLibraries: [],
-            //these are groups which are determined by the server (e.g. networking). This is a map of group key -> selected library
+            //these are groups which are determined by the server (e.g. physics). This is a map of group key -> selected library
             groupSelectedLibraries: {},
             //library key of the libary that supports desktop, VR etc
             platformLibraries: [],
@@ -367,83 +367,73 @@ class ReactGameForm extends React.Component {
         }
     }
 
-    renderFreeFormJmeLibraries(){
+    renderCategories(){
         if (this.state.availableLibraryData === null){
             return <div/>
         }else{
-            const jmeLibraryChecks = [];
+            const categories = [];
 
-            this.state.availableLibraryData.jmeGeneralLibraries.forEach(library => {
-                jmeLibraryChecks.push(<div className="form-check" key = {"libraryCheckDiv" + library.key}>
-                    <input disabled = {!this.libraryCurrentlySupported(library)} className="form-check-input" type="checkbox" value={library.key} id={"platformCheck" + library.key} checked = {this.state.freeSelectLibraries.includes(library.key)} onChange = {event => this.handleToggleFreeFormLibrary(library)} />
-                        <label className="form-check-label" htmlFor={"platformCheck" + library.key}>
-                            <b>{library.libraryName}</b>
-                            <p>{library.libraryDescription}</p>
-                        </label>
-                </div>);
+            this.state.availableLibraryData.specialCategories.forEach(categoryAndLibraries => {
+                if (categoryAndLibraries.category.onlyOneAllowed){
+                    categories.push(this.renderAsRadios(categoryAndLibraries))
+                }else{
+                    categories.push(this.renderAsCheckboxes(categoryAndLibraries))
+                }
             });
-            return jmeLibraryChecks;
+            return categories;
         }
     }
 
-    renderExclusiveGroups(){
-        if (this.state.availableLibraryData === null){
-            return <div/>
-        }else{
-            const groups = [];
-            this.state.availableLibraryData.specialCategories.forEach(specialCategory => {
+    renderAsRadios(categoryAndLibraries){
+        const thisGroupRadios = [];
 
-                const thisGroupRadios = [];
+        categoryAndLibraries.libraries.forEach(library => {
+            thisGroupRadios.push(<div className="form-check" key = {"platformRadioDiv" + library.key}>
+                <input disabled = {!this.libraryCurrentlySupported(library)} className="form-check-input" type="radio" name={categoryAndLibraries.category.key+"Radios"} id={categoryAndLibraries.category.key+"Radio" + library.key} value={library.key} checked = { this.isLibrarySelectedInGroup(categoryAndLibraries.category.key, library.key)} onChange={event => this.handleSetLibrarySelectedInGroup(categoryAndLibraries.category.key, library.key)} />
+                <label className="form-check-label" htmlFor={categoryAndLibraries.category.key+"Radio" + library.key}>
+                    <b dangerouslySetInnerHTML={{ __html: library.libraryName}}></b>
+                    <p>{library.libraryDescription}</p>
+                    {this.renderRequiredPlatformStatement(library)}
+                </label>
 
-                specialCategory.libraries.forEach(library => {
-                    thisGroupRadios.push(<div className="form-check" key = {"platformRadioDiv" + library.key}>
-                        <input disabled = {!this.libraryCurrentlySupported(library)} className="form-check-input" type="radio" name={specialCategory.category.key+"Radios"} id={specialCategory.category.key+"Radio" + library.key} value={library.key} checked = { this.isLibrarySelectedInGroup(specialCategory.category.key, library.key)} onChange={event => this.handleSetLibrarySelectedInGroup(specialCategory.category.key, library.key)} />
-                        <label className="form-check-label" htmlFor={specialCategory.category.key+"Radio" + library.key}>
-                            <b>{library.libraryName}</b>
-                            <p>{library.libraryDescription}</p>
-                            {this.renderRequiredPlatformStatement(library)}
-                        </label>
+            </div>)
+        })
 
-                    </div>)
-                })
+        thisGroupRadios.push(<div className="form-check" key = {"platformRadioDivNone"}>
+            <input className="form-check-input" type="radio" name={categoryAndLibraries.category.key+"Radios"} id={categoryAndLibraries.category.key+"RadioNone"} value="" checked = {this.hasNoLibraryForGroup(categoryAndLibraries.category.key)} onChange={event => this.handleSetLibrarySelectedInGroup(categoryAndLibraries.category.key, null)} />
+            <label className="form-check-label" htmlFor={categoryAndLibraries.category.key+"RadioNone"}>
+                <b>None</b>
+                <p>Do not include a library for this category</p>
+            </label>
+        </div>)
 
-                thisGroupRadios.push(<div className="form-check" key = {"platformRadioDivNone"}>
-                    <input className="form-check-input" type="radio" name={specialCategory.category.key+"Radios"} id={specialCategory.category.key+"RadioNone"} value="" checked = {this.hasNoLibraryForGroup(specialCategory.category.key)} onChange={event => this.handleSetLibrarySelectedInGroup(specialCategory.category.key, null)} />
-                    <label className="form-check-label" htmlFor={specialCategory.category.key+"RadioNone"}>
-                        <b>None</b>
-                        <p>Do not include a library for this category</p>
-                    </label>
-                </div>)
-
-                groups.push(<div key = {specialCategory.category.key}>
-                    <h2>{specialCategory.category.categoryDisplayName}</h2>
-                    <p>{specialCategory.category.categoryDescription}</p>
-                    {thisGroupRadios}
-                </div>)
-            })
-            return groups;
-        }
+        return <div key = {categoryAndLibraries.category.key}>
+            <h2>{categoryAndLibraries.category.categoryDisplayName}</h2>
+            <p>{categoryAndLibraries.category.categoryDescription}</p>
+            {thisGroupRadios}
+        </div>;
     }
 
-    renderOtherLibraries(){
-        if (this.state.availableLibraryData === null){
-            return <div/>
-        }else{
-            const libraryChecks = [];
+    renderAsCheckboxes(categoryAndLibraries){
+        const thisGroupCheckboxes = [];
 
-            this.state.availableLibraryData.generalLibraries.forEach(library => {
-                libraryChecks.push(<div className="form-check" key = {"libraryDiv" + library.key}>
-                    <input disabled = {!this.libraryCurrentlySupported(library)} className="form-check-input" type="checkbox" value={library.key} id={"libraryCheck" + library.key} checked = {this.state.freeSelectLibraries.includes(library.key)} onChange = {event => this.handleToggleFreeFormLibrary(library)} />
-                    <label className="form-check-label" htmlFor={"libraryCheck" + library.key}>
-                        <b dangerouslySetInnerHTML={{ __html: library.libraryName}}></b>
-                        <p>{library.libraryDescription}</p>
-                        {this.renderRequiredPlatformStatement(library)}
-                    </label>
+        categoryAndLibraries.libraries.forEach(library => {
+            thisGroupCheckboxes.push(<div className="form-check" key = {"platformRadioDiv" + library.key}>
+                <input disabled = {!this.libraryCurrentlySupported(library)} className="form-check-input" type="checkbox" value={library.key} id={"libraryCheck" + library.key} checked = {this.state.freeSelectLibraries.includes(library.key)} onChange = {event => this.handleToggleFreeFormLibrary(library)} />
+                <label className="form-check-label" htmlFor={"libraryCheck" + library.key}>
+                    <b dangerouslySetInnerHTML={{ __html: library.libraryName}}></b>
+                    <p>{library.libraryDescription}</p>
+                    {this.renderRequiredPlatformStatement(library)}
+                </label>
+            </div>)
+        })
 
-                </div>);
-            });
-            return libraryChecks;
-        }
+
+        return <div key = {categoryAndLibraries.category.key}>
+            <h2>{categoryAndLibraries.category.categoryDisplayName}</h2>
+            <p>{categoryAndLibraries.category.categoryDescription}</p>
+            {thisGroupCheckboxes}
+        </div>;
     }
 
     renderGradlePreview(){
@@ -507,17 +497,9 @@ class ReactGameForm extends React.Component {
             <div className="alert alert-secondary" role="alert">
                 Don't worry if you're not sure about libraries, you can always add more later
             </div>
-            <h2>
-                Additional JME libraries
-            </h2>
             <p>Essential JME libraries are included by default but select any more that may be useful here</p>
-            {this.renderFreeFormJmeLibraries()}
 
-            {this.renderExclusiveGroups()}
-
-            <h2>Community Libraries</h2>
-            <p>Libraries provided by the JME community</p>
-            {this.renderOtherLibraries()}
+            {this.renderCategories()}
 
             <br/>
 

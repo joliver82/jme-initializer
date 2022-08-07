@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,14 +28,8 @@ public class UiLibraryDataDto {
     @Schema(description = "The sub platform deployment targets e.g. windows. Typically used to include build scripts but can also be used to restrict libraries")
     List<DeploymentOptionDto> deploymentOptions;
 
-    @Schema(description = "The libraries that JME provides that don't fit into another category")
-    List<LibraryDto> jmeGeneralLibraries;
-
     @Schema(description = "A series of categories and the libraries in that category")
     List<CategoryAndLibrariesDto> specialCategories;
-
-    @Schema(description = "Non JME libraries that don't fit into another category")
-    List<LibraryDto> generalLibraries;
 
     @Schema(example = "[\"TAMARIN\"]", description = "These are the libraries that are selected by default in jmeGeneralLibraries and generalLibraries (ones where you can choose as many as you like")
     List<String> defaultSelectedFreeChoiceLibraries;
@@ -45,21 +40,30 @@ public class UiLibraryDataDto {
     @Schema(description = "This contains all the libraries in a map based on their keys, for convenience of the UI")
     Map<String, LibraryDto> allLibraries;
 
-    public UiLibraryDataDto(List<LibraryDto> jmePlatforms, List<DeploymentOptionDto> deploymentOptions, List<LibraryDto> jmeGeneralLibraries, List<CategoryAndLibrariesDto> specialCategories, List<LibraryDto> generalLibraries, List<String> defaultSelectedFreeChoiceLibraries, String defaultPlatform){
+    public UiLibraryDataDto(List<LibraryDto> jmePlatforms, List<DeploymentOptionDto> deploymentOptions, List<CategoryAndLibrariesDto> specialCategories, String defaultPlatform){
         this.jmePlatforms = jmePlatforms;
         this.deploymentOptions = deploymentOptions;
-        this.jmeGeneralLibraries = jmeGeneralLibraries;
         this.specialCategories = specialCategories;
-        this.generalLibraries = generalLibraries;
-        this.defaultSelectedFreeChoiceLibraries = defaultSelectedFreeChoiceLibraries;
+
+
+        this.defaultSelectedFreeChoiceLibraries = new ArrayList<>();
+        specialCategories.forEach(categoryAndLibrariesDto -> {
+            if (!categoryAndLibrariesDto.getCategory().isOnlyOneAllowed()){
+                categoryAndLibrariesDto.getLibraries()
+                        .stream()
+                        .filter(l -> l.selectedByDefault)
+                        .map(l -> l.key)
+                        .forEach(l -> defaultSelectedFreeChoiceLibraries.add(l));
+            }
+        });
+
+
         this.defaultPlatform = defaultPlatform;
 
         allLibraries = new HashMap<>();
 
         Consumer<List<LibraryDto>> mergeIntoAllLibraries = list -> list.forEach(lib -> allLibraries.put(lib.key, lib));
         mergeIntoAllLibraries.accept(this.jmePlatforms);
-        mergeIntoAllLibraries.accept(this.jmeGeneralLibraries);
         this.specialCategories.forEach(c -> mergeIntoAllLibraries.accept(c.getLibraries()));
-        mergeIntoAllLibraries.accept(this.generalLibraries);
     }
 }

@@ -116,21 +116,20 @@ public class LibraryService {
 
         List<CategoryAndLibrariesDto> specialCategories = new ArrayList<>();
         Arrays.stream(LibraryCategory.values())
-                .filter(c -> c!= LibraryCategory.JME_PLATFORM && c!= LibraryCategory.JME_GENERAL && c!= LibraryCategory.GENERAL)
+                .filter(c -> c != LibraryCategory.JME_PLATFORM && c != LibraryCategory.HIDDEN)
                 .forEach(c -> specialCategories.add(new CategoryAndLibrariesDto(
                         new CategoryDto(c),
                         librariesOfCategory(c).stream().map(l -> LibraryDto.libraryDtoFromLibrary(l, allPlatformKeys, allDeploymentKeys)).collect(Collectors.toList()),
                         defaultLibraryInExclusiveCategory(c).map(Library::getKey).orElse(null))
                 ));
 
+        //don't present empty categories to the UI for rendering. This is for graceful upgrades with new categories or removal of old categories
+        specialCategories.removeIf(c -> c.getLibraries().isEmpty());
 
         uiLibraryDataDto = new UiLibraryDataDto(
                 librariesOfCategory(LibraryCategory.JME_PLATFORM).stream().map(l -> LibraryDto.libraryDtoFromLibrary(l, allPlatformKeys, allDeploymentKeys)).collect(Collectors.toList()),
                 DeploymentOptionDto.wrapAsDto(DeploymentOption.values()),
-                librariesOfCategory(LibraryCategory.JME_GENERAL).stream().map(l -> LibraryDto.libraryDtoFromLibrary(l, allPlatformKeys, allDeploymentKeys)).collect(Collectors.toList()),
                 specialCategories,
-                librariesOfCategory(LibraryCategory.GENERAL).stream().map(l -> LibraryDto.libraryDtoFromLibrary(l, allPlatformKeys, allDeploymentKeys)).collect(Collectors.toList()),
-                Stream.of(LibraryCategory.JME_GENERAL, LibraryCategory.GENERAL).flatMap(c -> librariesOfCategory(c).stream()).filter(Library::isDefaultSelected).map(Library::getKey).collect(Collectors.toList()),
                 JME_DESKTOP
         );
     }
@@ -150,7 +149,7 @@ public class LibraryService {
      */
     public Optional<Library> defaultLibraryInExclusiveCategory(LibraryCategory category){
         if (!category.isOnlyOneAllowed()){
-            throw new RuntimeException("Method only applicable for exclusive categories but " + category.name() + " allows multiple selected values");
+            return Optional.empty();
         }
 
         List<Library> defaultsInCategory = librariesOfCategory(category).stream().filter(Library::isDefaultSelected).collect(Collectors.toList());
