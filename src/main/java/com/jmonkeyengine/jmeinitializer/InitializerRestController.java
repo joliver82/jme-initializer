@@ -1,7 +1,6 @@
 package com.jmonkeyengine.jmeinitializer;
 
 import com.jmonkeyengine.jmeinitializer.dto.MostRecentVersionSearchResult;
-import com.jmonkeyengine.jmeinitializer.libraries.Library;
 import com.jmonkeyengine.jmeinitializer.libraries.LibraryService;
 import com.jmonkeyengine.jmeinitializer.uisupport.UiLibraryDataDto;
 import com.jmonkeyengine.jmeinitializer.versions.FreeFormVersionSearchService;
@@ -19,8 +18,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -110,7 +107,7 @@ public class InitializerRestController {
     public ResponseEntity<MostRecentVersionSearchResult> getMostRecentVersion(
             @Parameter(description="Library group id", example = "com.onemillionworlds") @RequestParam String groupId,
             @Parameter(description="Library Artifact Id", example = "tamarin") @RequestParam String artifactId,
-            @Parameter(description="Acceptable version regex (used to filter out beta releases etc). Be sure to escape correctly for a url", example = "[\\.\\d]*") @RequestParam(defaultValue="[\\.\\d]*") String versionRegex) {
+            @Parameter(description="Acceptable version regex (used to filter out beta releases etc)", example = "[\\.\\d]*") @RequestParam(defaultValue="[\\.\\d]*") String versionRegex) {
 
         Optional<String> version = freeFormVersionSearchService.fetchOrGetMostRecentVersion(groupId, artifactId, versionRegex);
 
