@@ -48,7 +48,6 @@ distZip {
     }
     includeEmptyDirs(false)
 }
-[FRAGMENT=gradleDeploymentJava17.fragment]
 [FRAGMENT=gradleDeployment.fragment]
 // cleanup tasks
 clean.dependsOn('cleanDLLs', 'cleanDyLibs', 'cleanLogs', 'cleanSOs')
