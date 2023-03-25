@@ -9,8 +9,8 @@ plugins {
 description = '[GAME_NAME] application'
 
 java {
-    sourceCompatibility = '11'
-    targetCompatibility = '11'
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
 }
 
 ext.jmonkeyengineVersion = '[JME_VERSION]'
@@ -48,6 +48,7 @@ distZip {
     }
     includeEmptyDirs(false)
 }
+[FRAGMENT=gradleDeploymentJava17.fragment]
 [FRAGMENT=gradleDeployment.fragment]
 // cleanup tasks
 clean.dependsOn('cleanDLLs', 'cleanDyLibs', 'cleanLogs', 'cleanSOs')
