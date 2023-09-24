@@ -26,7 +26,7 @@ repositories {
 }
 
 application {
-    applicationDefaultJvmArgs = ['-XstartOnFirstThread'] // this is required for MacOs which requires the AppKit main UI thread to be used for GUI applications
+    applicationDefaultJvmArgs = ['-XstartOnFirstThread'] // this is when using a Mac as a development machine which requires the AppKit main UI thread to be used for GUI applications
 }
 
 dependencies {
