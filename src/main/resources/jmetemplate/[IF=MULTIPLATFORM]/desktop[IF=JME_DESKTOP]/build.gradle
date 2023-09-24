@@ -13,6 +13,10 @@ java {
     targetCompatibility = '11'
 }
 
+application {
+    applicationDefaultJvmArgs = ['-XstartOnFirstThread'] // this is required for MacOs which requires the AppKit main UI thread to be used for GUI applications
+}
+
 ext.jmonkeyengineVersion = '[JME_VERSION]'
 
 dependencies {

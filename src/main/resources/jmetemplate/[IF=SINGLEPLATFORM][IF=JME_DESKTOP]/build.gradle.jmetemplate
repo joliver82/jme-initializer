@@ -25,6 +25,10 @@ repositories {
     [MAVEN_REPOS]
 }
 
+application {
+    applicationDefaultJvmArgs = ['-XstartOnFirstThread'] // this is required for MacOs which requires the AppKit main UI thread to be used for GUI applications
+}
+
 dependencies {
     // You can read more about how to add dependencies here:
     //   https://docs.gradle.org/current/userguide/dependency_management.html#sec:how_to_declare_your_dependencies
