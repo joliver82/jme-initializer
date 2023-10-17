@@ -47,6 +47,9 @@ public class Merger {
     //the "anything but = is to avoid double ifs merging
     private Pattern mergeIfConditionPattern = Pattern.compile("\\[IF=([^\\]]*)]");
 
+    //the "anything but = is to avoid double nots merging
+    private Pattern mergeNotConditionPattern = Pattern.compile("\\[NOT=([^\\]]*)]");
+
     private Pattern fragmentPattern = Pattern.compile("\\[FRAGMENT=([a-zA-Z0-9./]*)]");
 
     /**
@@ -96,12 +99,22 @@ public class Merger {
     }
 
     public boolean pathShouldBeAllowed(String pathTemplate){
-        Matcher matcher = mergeIfConditionPattern.matcher(pathTemplate);
+        Matcher ifMatcher = mergeIfConditionPattern.matcher(pathTemplate);
 
-        while( matcher.find() ){
-            String requiredLibrary = matcher.group(1);
+        while( ifMatcher.find() ){
+            String requiredLibrary = ifMatcher.group(1);
 
             if (!libraryConditionStringPasses(requiredLibrary)){
+                return false;
+            }
+        }
+
+        Matcher notMatcher = mergeNotConditionPattern.matcher(pathTemplate);
+
+        while( notMatcher.find() ){
+            String requiredLibrary = notMatcher.group(1);
+
+            if (libraryConditionStringPasses(requiredLibrary)){
                 return false;
             }
         }
@@ -116,6 +129,7 @@ public class Merger {
         }
         //any "ifs" are removed from the path (they should have already been used to assess if the file should be included
         path = path.replaceAll("\\[IF=([^=]*)]", "");
+        path = path.replaceAll("\\[NOT=([^=]*)]", "");
         path = path.replaceAll("//+", "/"); //if the if is the entirety of the folder then redundant folder is collapsed
         path = path.replace(".jmetemplate", "");
         path = path.replaceAll("^/", ""); //empty conditional folders at the start of the path can cause a preceding / which makes the zips "all weird". This removes that
@@ -179,7 +193,7 @@ public class Merger {
 
         fileContentsAsString = processIfStatements(fileContentsAsString);
 
-        //always end with a new character because that will make git changes better in the future (plus the test want that)
+        //always end with a new character because that will make git changes better in the future (plus the tests want that)
         fileContentsAsString = fileContentsAsString+"\n";
 
         return fileContentsAsString.getBytes(StandardCharsets.UTF_8);
@@ -187,9 +201,14 @@ public class Merger {
 
     private String processIfStatements(String fileContentsAsString){
         Set<String> foundIfConditions = new HashSet<>();
+        Set<String> foundNotConditions = new HashSet<>();
         Matcher ifMatcher = mergeIfConditionPattern.matcher(fileContentsAsString);
+        Matcher notMatcher = mergeNotConditionPattern.matcher(fileContentsAsString);
         while(ifMatcher.find()){
             foundIfConditions.add(ifMatcher.group(1));
+        }
+        while(notMatcher.find()){
+            foundNotConditions.add(notMatcher.group(1));
         }
 
         Set<String> failingIfConditions = new HashSet<>();
@@ -203,6 +222,17 @@ public class Merger {
             }
         }
 
+        Set<String> failingNotConditions = new HashSet<>();
+        for(String foundNotCondition : foundNotConditions){
+            boolean notConditionPasses = !libraryConditionStringPasses(foundNotCondition);
+            if(notConditionPasses){
+                fileContentsAsString = fileContentsAsString.replace("[NOT=" + foundNotCondition + "]", "");
+                fileContentsAsString = fileContentsAsString.replace("[/NOT=" + foundNotCondition + "]", "");
+            }else{
+                failingNotConditions.add(foundNotCondition);
+            }
+        }
+
         //eliminate any remaining ifs and their contents
         //I suspect a single really advanced regex could do the below in one go, but its a painful double "not this" so I've gone for this probably less efficient approach
 
@@ -210,6 +240,11 @@ public class Merger {
             for(String remainingIf : failingIfConditions){
                 //this 2 step process of first eliminating down to a _eliminated_ string and then removing that is to get any whitespace eliminated nicely
                 String regex = "\\[IF=" + Pattern.quote(remainingIf) + "]((?!IF=).)*\\[/IF=" + Pattern.quote(remainingIf) + "]";
+                fileContentsAsString = Pattern.compile(regex, Pattern.DOTALL).matcher(fileContentsAsString).replaceAll("_eliminated_");
+            }
+            for(String remainingNot : failingNotConditions){
+                //this 2 step process of first eliminating down to a _eliminated_ string and then removing that is to get any whitespace eliminated nicely
+                String regex = "\\[NOT=" + Pattern.quote(remainingNot) + "]((?!NOT=).)*\\[/NOT=" + Pattern.quote(remainingNot) + "]";
                 fileContentsAsString = Pattern.compile(regex, Pattern.DOTALL).matcher(fileContentsAsString).replaceAll("_eliminated_");
             }
             //kill including the new line after the closure, if thats the only thing on the line

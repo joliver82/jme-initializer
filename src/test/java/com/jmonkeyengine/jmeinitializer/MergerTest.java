@@ -125,6 +125,31 @@ class MergerTest {
     }
 
     @Test
+    void mergeText_notStatements(){
+        Library testLibraryA = Library.builder("testLibraryA", "A test library",  LibraryCategory.GENERAL, "description").build();
+
+        Library testLibraryB =  Library.builder("testLibraryB", "B test library",  LibraryCategory.GENERAL, "description").build();
+
+        Merger merger = new Merger("My Game!!", "my.excellent.company", List.of(testLibraryA, testLibraryB), List.of("SINGLEPLATFORM"), "1", Map.of(), noOpFragmentSupplier);
+
+        String testString =
+                """
+                    Normal Text
+                    [NOT=testLibraryA]This should not show A[/NOT=testLibraryA]
+                    [NOT=nonExistentC]This should show C[/NOT=nonExistentC]
+                    [NOT=testLibraryB]This should not show B[/NOT=testLibraryB]
+                    Normal text
+                """;
+        String expectedString =
+                """
+                    Normal Text
+                    This should show C
+                    Normal text
+                """;
+        assertEquals(expectedString, new String(merger.mergeFileContents(testString.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8));
+    }
+
+    @Test
     void pathShouldBeAllowed(){
         Library testLibraryA = Library.builder("testLibraryA", "A test library",  LibraryCategory.GENERAL, "description").build();
         Library testLibraryB = Library.builder("testLibraryB", "B test library",  LibraryCategory.GENERAL, "description").build();
@@ -133,6 +158,8 @@ class MergerTest {
 
         assertTrue(merger.pathShouldBeAllowed("common/or/garden/path"));
         assertTrue(merger.pathShouldBeAllowed("path/[IF=testLibraryA]/path"));
+        assertTrue(merger.pathShouldBeAllowed("path/[NOT=testLibraryC]/path"));
+        assertFalse(merger.pathShouldBeAllowed("path/[NOT=testLibraryA]/path"));
         assertTrue(merger.pathShouldBeAllowed("path/something[IF=testLibraryA]/path/[IF=testLibraryB]/path"));
         assertFalse(merger.pathShouldBeAllowed("path/something[IF=testLibraryA]/path/[IF=testLibraryC]/path"));
         assertFalse(merger.pathShouldBeAllowed("path/[IF=testLibraryC]/path"));
@@ -140,7 +167,7 @@ class MergerTest {
         assertTrue(merger.pathShouldBeAllowed("path/[IF=SINGLEPLATFORM]/path"));
 
         assertTrue(merger.pathShouldBeAllowed("[IF=testLibraryA][IF=testLibraryB]/src/main/java/[GAME_PACKAGE_FOLDER]/[GAME_NAME].java"));
-
+        assertTrue(merger.pathShouldBeAllowed("[IF=testLibraryA][NOT=testLibraryC][NOT=testLibraryD]/src/main/java/[GAME_PACKAGE_FOLDER]/[GAME_NAME].java"));
     }
 
     @Test
@@ -157,7 +184,7 @@ class MergerTest {
         assertEquals("path/path", merger.mergePath("path/[IF=SINGLEPLATFORM]/path"));
         assertEquals("path/path", merger.mergePath("path/[IF=SINGLEPLATFORM][IF=JME_DESKTOP]/path"));
         assertEquals("path1/path2", merger.mergePath("[IF=SINGLEPLATFORM][IF=JME_DESKTOP]/path1/path2"));
-
+        assertEquals("path1/path2", merger.mergePath("[NOT=SINGLEPLATFORM][IF=JME_DESKTOP]/path1/path2[NOT=TAMARIN]"));
     }
 
 
