@@ -77,7 +77,7 @@ public class LibraryService {
             ResponseEntity<String> apiResponse = restTemplate.getForEntity(fetchUrl, String.class);
 
             if(apiResponse.getStatusCode().is2xxSuccessful()){
-                updateLibrariesBasedOnJson(apiResponse.getBody());
+                    updateLibrariesBasedOnJson(apiResponse.getBody());
             } else{
                 log.warn("Failed to fetch libraries, received " + apiResponse);
             }
@@ -90,6 +90,9 @@ public class LibraryService {
         try{
             Library[] libraries = mapper.readValue(jsonString, Library[].class);
             for( Library library : libraries){
+                //at present the data we're getting is just claiming that specialisedToPlatforms are required platforms (which is breaking Tamarin)
+                library.setSpecialisedToPlatforms(
+                        Stream.concat(library.getSpecialisedToPlatforms().stream(), library.getRequiredPlatforms().stream()).collect(Collectors.toList()));
                 newAvailableLibraries.put(library.getKey(), library);
             }
         } catch(JsonProcessingException e){

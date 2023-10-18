@@ -9,8 +9,8 @@ mainClassName = '[GAME_PACKAGE].vrmodule.VrLauncher'
 String dependenciesString = ""
 
 java {
-    sourceCompatibility = '11'
-    targetCompatibility = '11'
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
 }
 
 ext.jmonkeyengineVersion = '[JME_VERSION]'
@@ -20,7 +20,12 @@ dependencies {
     implementation 'org.jmonkeyengine:jme3-core:' + jmonkeyengineVersion
     implementation "org.jmonkeyengine:jme3-effects:" + jmonkeyengineVersion
     implementation "org.jmonkeyengine:jme3-lwjgl3:" + jmonkeyengineVersion
+    [NOT=TAMARIN]
     implementation 'org.jmonkeyengine:jme3-vr:' + jmonkeyengineVersion
+    [/NOT=TAMARIN]
+    [IF=TAMARIN]
+    implementation 'org.jmonkeyengine:jme3-desktop:' + jmonkeyengineVersion
+    [/IF=TAMARIN]
     [VR_SPECIALISED_DEPENDENCIES]
 }
 task copyJars(type: Copy) {

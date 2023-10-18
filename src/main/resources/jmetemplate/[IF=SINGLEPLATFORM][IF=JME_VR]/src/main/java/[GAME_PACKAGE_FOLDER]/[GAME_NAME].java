@@ -2,18 +2,26 @@ package [GAME_PACKAGE];
 
 import com.jme3.app.LostFocusBehavior;
 import com.jme3.app.SimpleApplication;
+[NOT=TAMARIN]
 import com.jme3.app.VRAppState;
 import com.jme3.app.VRConstants;
 import com.jme3.app.VREnvironment;
+[/NOT=TAMARIN]
 import com.jme3.app.state.AppState;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Spatial;
 import com.jme3.system.AppSettings;
 [IF=TAMARIN]
-import com.onemillionworlds.tamarin.compatibility.ActionBasedOpenVrState;
-import com.onemillionworlds.tamarin.vrhands.BoundHand;
+import com.onemillionworlds.tamarin.actions.ActionType;
+import com.onemillionworlds.tamarin.actions.OpenXrActionState;
+import com.onemillionworlds.tamarin.actions.actionprofile.Action;
+import com.onemillionworlds.tamarin.actions.actionprofile.ActionManifest;
+import com.onemillionworlds.tamarin.actions.actionprofile.ActionSet;
+import com.onemillionworlds.tamarin.openxr.XrAppState;
+import com.onemillionworlds.tamarin.openxr.XrSettings;
 import com.onemillionworlds.tamarin.vrhands.HandSpec;
+import com.onemillionworlds.tamarin.vrhands.VRHandsAppState;
 import com.onemillionworlds.tamarin.vrhands.VRHandsAppState;
 [/IF=TAMARIN]
 
@@ -22,6 +30,7 @@ import java.io.File;
 public class [GAME_NAME] extends SimpleApplication{
 
     public static void main(String[] args) {
+        [NOT=TAMARIN]
         AppSettings settings = new AppSettings(true);
         settings.put(VRConstants.SETTING_VRAPI, VRConstants.SETTING_VRAPI_OPENVR_LWJGL_VALUE);
         VREnvironment env = new VREnvironment(settings);
@@ -35,6 +44,19 @@ public class [GAME_NAME] extends SimpleApplication{
             app.setShowSettings(false);
             app.start();
         }
+        [/NOT=TAMARIN]
+        [IF=TAMARIN]
+            AppSettings settings = new AppSettings(true);
+            settings.put("Renderer", AppSettings.LWJGL_OPENGL45); // OpenXR only supports relatively modern OpenGL
+            settings.setTitle("[GAME_NAME_FULL]");
+            settings.setVSync(false); // don't want to VSync to the monitor refresh rate, we want to VSync to the headset refresh rate (which tamarin implictly handles)
+
+            [GAME_NAME] app = new [GAME_NAME]();
+            app.setLostFocusBehavior(LostFocusBehavior.Disabled);
+            app.setSettings(settings);
+            app.setShowSettings(false);
+            app.start();
+        [/IF=TAMARIN]
     }
 
     public [GAME_NAME](AppState... appStates) {
@@ -44,49 +66,46 @@ public class [GAME_NAME] extends SimpleApplication{
     @Override
     public void simpleInitApp(){
         [IF=TAMARIN]
-        ActionBasedOpenVrState actionBasedOpenVrState = new ActionBasedOpenVrState();
-        getStateManager().attach(actionBasedOpenVrState);
-        actionBasedOpenVrState.registerActionManifest(new File("openVr/actionManifest.json").getAbsolutePath(), "/actions/main" );
-
+        getStateManager().attach(new XrAppState());
+        getStateManager().attach(new OpenXrActionState(manifest(), ActionSets.MAIN));
         getStateManager().attach(new VRHandsAppState(handSpec()));
-
-        if(actionBasedOpenVrState.getAnalogActionState( "/actions/main/in/trigger").x>0.5f){
-            System.out.println("trigger");
-        }
-        if(actionBasedOpenVrState.getDigitalActionState( "/actions/main/in/turnLeft").state){
-            System.out.println("turn left");
-        }
-        //etc for other actions
         [/IF=TAMARIN]
     }
 
 [IF=TAMARIN]
-    @Override
-    public void simpleUpdate(float tpf){
-        super.simpleUpdate(tpf);
 
-        VRAppState vrAppState = getStateManager().getState(VRAppState.class);
-        vrAppState.getLeftViewPort().setBackgroundColor(ColorRGBA.Brown);
-        vrAppState.getRightViewPort().setBackgroundColor(ColorRGBA.Brown);
+    private static ActionManifest manifest(){
 
-    }
+        //see https://github.com/oneMillionWorlds/Tamarin/wiki/Action-Based-Vr for more details on actions
+
+        Action handPose = Action.builder()
+            .actionHandle(ActionHandles.HAND_POSE)
+            .translatedName("Hand Pose")
+            .actionType(ActionType.POSE)
+            .withSuggestAllKnownAimPoseBindings()
+            .build();
+
+        return ActionManifest.builder()
+            .withActionSet(ActionSet
+                .builder()
+                .name("main")
+                .translatedName("Main Actions")
+                .priority(1)
+                .withAction(handPose)
+                //add more actions here
+                .build()
+            ).build();
+        }
 
     /**
-     * The hand spec describes the openVr actions that are bound to the hand graphics, as well as a grab action.
+     * The hand spec describes the openXR actions that are bound to the hand graphics
      * The hand model could also be changed here but the tamarin default is being used here
      */
-    private HandSpec handSpec(){
+    private static HandSpec handSpec(){
         return HandSpec.builder(
-                "/actions/main/in/HandPoseLeft",
-                "/actions/main/in/HandSkeletonLeft",
-                "/actions/main/in/HandPoseRight",
-                "/actions/main/in/HandSkeletonRight")
-            .postBindLeft(leftHand -> {
-                leftHand.setGrabAction("/actions/main/in/grip", rootNode);
-            })
-            .postBindRight(rightHand -> {
-                rightHand.setGrabAction("/actions/main/in/grip", rootNode);
-            }).build();
+                ActionHandles.HAND_POSE,
+                ActionHandles.HAND_POSE
+            ).build();
     }
 
 [/IF=TAMARIN]

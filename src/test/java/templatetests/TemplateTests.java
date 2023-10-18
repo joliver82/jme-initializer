@@ -25,8 +25,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * These tests physically create a template and then run gradle compile on that template.
- *
+ * <p>
  * A successful build of the template passes the test. This is to catch compile failures in the templates
+ * </p>
+ *
+ * <p>
+ *     Note: these tests are not run by default, they are only run when the "TemplateTests" tag is specified.
+ *     This is because they are a little sensitive to what libraries are doing and what JDK installed locally
+ * </p>
  */
 @Tag("TemplateTests")
 public class TemplateTests{

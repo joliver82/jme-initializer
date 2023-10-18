@@ -4,8 +4,14 @@ plugins {
 }
 
 java {
+    [NOT=JME_ANDROID]
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
+    [/NOT=JME_ANDROID]
+    [IF=JME_ANDROID]
     sourceCompatibility = '11'
     targetCompatibility = '11'
+    [/IF=JME_ANDROID]
 }
 
 ext.jmonkeyengineVersion = '[JME_VERSION]'
