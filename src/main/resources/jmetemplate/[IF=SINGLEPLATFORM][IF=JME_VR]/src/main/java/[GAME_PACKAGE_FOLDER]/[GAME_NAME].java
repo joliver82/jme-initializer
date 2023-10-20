@@ -66,10 +66,23 @@ public class [GAME_NAME] extends SimpleApplication{
     @Override
     public void simpleInitApp(){
         [IF=TAMARIN]
-        getStateManager().attach(new XrAppState());
+        XrAppState xrState = new XrAppState();
+        xrState.movePlayersFeetToPosition(new Vector3f(0,0,10));
+        xrState.playerLookAtPosition(new Vector3f(0,0,0));
+
+        getStateManager().attach(xrState);
         getStateManager().attach(new OpenXrActionState(manifest(), ActionSets.MAIN));
         getStateManager().attach(new VRHandsAppState(handSpec()));
         [/IF=TAMARIN]
+
+        Box b = new Box(1, 1, 1);
+        Geometry geom = new Geometry("Box", b);
+
+        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        mat.setColor("Color", ColorRGBA.Blue);
+        geom.setMaterial(mat);
+
+        rootNode.attachChild(geom);
     }
 
 [IF=TAMARIN]
