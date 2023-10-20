@@ -129,5 +129,9 @@ task buildAllDistributions{
     [IF=WINDOWS]dependsOn 'zipWindowsDistribution'[/IF=WINDOWS]
     [IF=LINUX]dependsOn 'zipLinuxDistribution'[/IF=LINUX]
     [IF=MACOS]dependsOn 'zipMacDistribution'[/IF=MACOS]
+
+    doLast {
+        println("Distributions created in build/distributions folder")
+    }
 }
 [/IF=WINDOWS|LINUX|MACOS]
