@@ -12,6 +12,9 @@ import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Spatial;
 import com.jme3.system.AppSettings;
+import com.jme3.scene.shape.Box;
+import com.jme3.scene.Geometry;
+import com.jme3.math.Vector3f;
 [IF=TAMARIN]
 import com.onemillionworlds.tamarin.actions.ActionType;
 import com.onemillionworlds.tamarin.actions.OpenXrActionState;
