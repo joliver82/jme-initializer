@@ -1,6 +1,7 @@
 package [GAME_PACKAGE].vrmodule;
 
 import [GAME_PACKAGE].game.[GAME_NAME];
+import com.jme3.math.Vector3f;
 import com.jme3.app.LostFocusBehavior;
 import com.jme3.system.AppSettings;
 import com.onemillionworlds.tamarin.actions.ActionType;
@@ -9,9 +10,7 @@ import com.onemillionworlds.tamarin.actions.actionprofile.Action;
 import com.onemillionworlds.tamarin.actions.actionprofile.ActionManifest;
 import com.onemillionworlds.tamarin.actions.actionprofile.ActionSet;
 import com.onemillionworlds.tamarin.openxr.XrAppState;
-import com.onemillionworlds.tamarin.openxr.XrSettings;
 import com.onemillionworlds.tamarin.vrhands.HandSpec;
-import com.onemillionworlds.tamarin.vrhands.VRHandsAppState;
 import com.onemillionworlds.tamarin.vrhands.VRHandsAppState;
 
 /**
@@ -25,7 +24,11 @@ public class VrLauncher {
         settings.setTitle("[GAME_NAME_FULL]");
         settings.setVSync(false); // don't want to VSync to the monitor refresh rate, we want to VSync to the headset refresh rate
 
-        [GAME_NAME] app = new [GAME_NAME](new XrAppState(), new OpenXrActionState(manifest(), ActionSets.MAIN), new VRHandsAppState(handSpec()));
+        XrAppState xrState = new XrAppState();
+        xrState.movePlayersFeetToPosition(new Vector3f(0,0,10));
+        xrState.playerLookAtPosition(new Vector3f(0,0,0));
+
+        [GAME_NAME] app = new [GAME_NAME](xrState, new OpenXrActionState(manifest(), ActionSets.MAIN), new VRHandsAppState(handSpec()));
         app.setLostFocusBehavior(LostFocusBehavior.Disabled);
         app.setSettings(settings);
         app.setShowSettings(false);
