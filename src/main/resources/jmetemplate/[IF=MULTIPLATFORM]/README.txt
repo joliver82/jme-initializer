@@ -43,13 +43,17 @@ If you are using Android Studio launch and debug options will be available direc
     $./gradlew :desktop:copyJars
 ```
 [/IF=JME_DESKTOP]
+[IF=JME_ANDROID]
 ### Android : 
 ```gradle
     $./gradlew :app:assemble
 ```
+[/IF=JME_ANDROID]
 
 Note that if you are releasing your app on the android play store it must be signed with an appropriate key, see
 https://developer.android.com/studio/build/building-cmdline for more details on how to produce such apks
+
+[FRAGMENT=gradleDeploymentReadme.fragment]
 
 References : 
 

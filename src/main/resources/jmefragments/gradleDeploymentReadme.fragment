@@ -13,6 +13,6 @@ Or:
 
 In the command line open at the root of this project enter the following command: gradlew buildAllDistributions
 
-Then you will find a series of zip in the build/distributions folder. These zip will contain your game, all the libraries to run it and an
+Then you will find a series of zip in the build/distributions folder. These zip(s) will contain your game, all the libraries to run it and an
 OS specific JRE. (The same files will also be available unzipped in a folder, which may be useful if distributing via steampipe or similar).
 [/IF=WINDOWS|LINUX|MACOS]
